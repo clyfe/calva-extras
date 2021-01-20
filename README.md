@@ -19,8 +19,8 @@ code --install-extension calva-extras-0.0.1.vsix
   * Cuts.
   * Copies (extra undo needed!).
 * `calva-extras.killSpaceBackward` command aka "the new backspace":
-  * kills mutiple spaces and takes stops directy in the end position
-  * no more delete spaces by space timewaste
+  * kills mutiple spaces and stops directy in the end position
+  * no more delete "space by space" timewaste
 
 Recommended bindings:
 
