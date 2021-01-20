@@ -2,6 +2,14 @@
 
 Makes paredit easy.
 
+### Install
+
+```bash
+sudo npm install -g vsce
+vsce package
+code --install-extension calva-extras-0.0.1.vsix
+```
+
 ### Usage
 
 * `killToClipboard` the one true sexp command:

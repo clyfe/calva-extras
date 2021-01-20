@@ -4,6 +4,10 @@
 	"description": "https://calva.io/extras",
 	"version": "0.0.1",
 	"publisher": "clyfe",
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/clyfe/calva-extras.git"
+  },
 	"engines": {
 		"vscode": "^1.52.0"
 	},
