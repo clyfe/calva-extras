@@ -18,9 +18,13 @@ code --install-extension calva-extras-0.0.1.vsix
   * Deletes (but overwrites clipbord).
   * Cuts.
   * Copies (extra undo needed!).
-* `calva-extras.killSpaceBackward` command aka "the new backspace":
-  * kills mutiple spaces and stops directy in the end position
-  * no more delete "space by space" timewaste
+* `calva-extras.killSpaceBackward` aka "the new backspace":
+  * Kills mutiple spaces and stops directy in the end position.
+  * No more delete "space by space" timewaste.
+* `calva-extras.backspacePositional` aka "the new new backspace":
+  * Deletes forms and spaces separately.
+  * " (|)" + backspace now yields " " instead "" directly.
+  * 2nd backspace needed to delete the space too
 
 Recommended bindings:
 
@@ -32,7 +36,7 @@ Recommended bindings:
   },
   {
     "key": "backspace",
-    "command": "calva-extras.killSpaceBackward",
+    "command": "calva-extras.backspacePositional",
     "when": "calva:keybindingsEnabled && editorTextFocus && editorLangId == 'clojure' && paredit:keyMap =~ /original|strict/"
   }
 ```
