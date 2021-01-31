@@ -1,6 +1,5 @@
 import {
   window,
-  extensions,
   commands,
   ExtensionContext,
   TextEditor,
@@ -77,7 +76,7 @@ async function killSpaceBackward() {
   const formattedLineLen: number = document.lineAt(active.line).text.length;
   const formattedShorter: boolean = formattedLineLen < lineLen;
 
-  // Too many spaces, remove some and align.
+  // Too many spaces, removed some and aligned, so: return.
   if (formattedShorter) { return; }
 
   // Aligned or too few spaces, move at upper line end (if any).
@@ -98,9 +97,39 @@ async function killSpaceBackward() {
   executeCommand("calva-fmt.formatCurrentForm");
 };
 
+const parenPair = new Set(["()", "[]", "{}", '""']);
+
+// Backspace replacement that deletes forms and spaces separately.
+// Example:
+//   - " (|)" + backspace now yields " " instead "";
+//   - 2nd backspace needed to delete the space too.
+async function backspacePositional() {
+  const activeTextEditor: TextEditor = window.activeTextEditor!;
+  const active: Position = activeTextEditor.selection.active;
+  const document: TextDocument = activeTextEditor.document;
+
+  if (active.character === 0) {
+    executeCommand("calva-extras.killSpaceBackward");
+    return;
+  }
+
+  const range0: Range = new Range(active.translate(0, -1), active.translate(0, 1));
+  const range: Range = document.validateRange(range0);
+  const neighbours: string = document.getText(range);
+
+  if(parenPair.has(neighbours)) {
+    activeTextEditor.edit((editBuilder) => {
+      editBuilder.delete(range);
+    });
+  } else {
+    executeCommand("calva-extras.killSpaceBackward");
+  }
+}
+
 export function activate(context: ExtensionContext) {
   const sub = context.subscriptions;
   const reg = registerCommand;
   sub.push(reg('calva-extras.killToClipboard', killToClipboard));
   sub.push(reg('calva-extras.killSpaceBackward', killSpaceBackward));
+  sub.push(reg('calva-extras.backspacePositional', backspacePositional));
 }
