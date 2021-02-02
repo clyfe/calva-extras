@@ -4,4 +4,10 @@
 
 ## [Unreleased]
 
-- Added `killToClipboard` & `killSpaceBackward`.
+- Added `contributes.keybindings`.
+
+## [0.0.1] - 2021-02-01
+
+- Added `killToClipboard`.
+- Added `killSpaceBackward`.
+- Added `backspacePositional`.

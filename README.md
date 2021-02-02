@@ -13,33 +13,21 @@ code --install-extension calva-extras-0.0.1.vsix
 
 ### Usage
 
-* `calva-extras.killToClipboard` the one true sexp command:
+* `calva-extras.killToClipboard` the one true sexp command `Alt+d`:
   * Operates on sexps after cursor.
   * Deletes (but overwrites clipbord).
   * Cuts.
   * Copies (extra undo needed!).
-* `calva-extras.killSpaceBackward` aka "the new backspace":
+* `calva-extras.killSpaceBackward` aka "the new `backspace`":
   * Kills mutiple spaces and stops directy in the end position.
   * No more delete "space by space" timewaste.
-* `calva-extras.backspacePositional` aka "the new new backspace":
+* `calva-extras.backspacePositional` aka "the new new `backspace`":
   * Deletes forms and spaces separately.
   * " (|)" + backspace now yields " " instead "" directly.
   * 2nd backspace needed to delete the space too
 
-Recommended bindings:
-
-```json
-  {
-    "key": "alt+d",
-    "command": "calva-extras.killToClipboard",
-    "when": "calva:keybindingsEnabled && editorTextFocus && editorLangId == 'clojure' && paredit:keyMap =~ /original|strict/"
-  },
-  {
-    "key": "backspace",
-    "command": "calva-extras.backspacePositional",
-    "when": "calva:keybindingsEnabled && editorTextFocus && editorLangId == 'clojure' && paredit:keyMap =~ /original|strict/"
-  }
-```
+Recommended bindings: see `contributes.keybindings` in `package.json`.  
+If there are conflicting keybindings, set them manually in user config.
 
 ### License
 

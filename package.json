@@ -28,6 +28,18 @@
 				"command": "calva-extras.killSpaceBackward",
 				"title": "Calva Extras: Kill Space Backward"
 			}
+		],
+		"keybindings": [
+			{
+				"key": "alt+d",
+				"command": "calva-extras.killToClipboard",
+				"when": "calva:keybindingsEnabled && editorTextFocus && editorLangId == 'clojure' && paredit:keyMap =~ /original|strict/"
+			},
+			{
+				"key": "backspace",
+				"command": "calva-extras.backspacePositional",
+				"when": "calva:keybindingsEnabled && editorTextFocus && !editorHasMultipleSelections && !editorReadOnly && editorLangId == 'clojure' && paredit:keyMap == 'strict'"
+			}
 		]
 	},
 	"scripts": {
