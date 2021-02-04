@@ -73,23 +73,29 @@ async function killSpaceBackward() {
 
   const lineLen: number = document.lineAt(active.line).text.length;
   await executeCommand("calva-fmt.formatCurrentForm");
-  const formattedLineLen: number = document.lineAt(active.line).text.length;
-  const formattedShorter: boolean = formattedLineLen < lineLen;
 
-  // Too many spaces, removed some and aligned, so: return.
-  if (formattedShorter) { return; }
+  // WARNING: Strange heuristics ahead. We work with what we have...
+  // If too many spaces, formt removed some and aligned.
+  // Normally we'd return in that case, but we can't tell.
+  // We just assume that was not the case, can continue with the other branch.
+  // If it was the case, the ops that follow will just fail.
 
   // Aligned or too few spaces, move at upper line end (if any).
+  // TODO: when blank lines contain spaces, have to backspace twice; meh.
   let range: Range = spaces!;
-  const line: number = active.line;
-  if (0 < line) {
-    let textLen: number = document.lineAt(line - 1).text.length;
-    const positionUp: Position = active.with(line - 1, textLen - 1);
+  const whiteSpace = /^\s*$/;
+  let line: number = active.line - 1;
+  while (0 < line && whiteSpace.test(document.lineAt(line).text)) {
+    line--;
+  }
+  if (0 <= line) {
+    let textLen: number = document.lineAt(line).text.length;
+    const positionUp: Position = active.with(line, textLen);
+    range = range.with(positionUp);
     const spacesUp: Range | undefined =
       document.getWordRangeAtPosition(positionUp, /\s+/);
     // Add the spaces or the newline to the range.
     if (spacesUp !== undefined) { range = range.union(spacesUp); }
-    else { range = range.with(active.with(line - 1, textLen)); }
   }
   await activeTextEditor.edit((editBuilder) => {
     editBuilder.replace(range, " ");
