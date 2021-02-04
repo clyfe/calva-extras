@@ -84,13 +84,13 @@ async function killSpaceBackward() {
   // TODO: when blank lines contain spaces, have to backspace twice; meh.
   let range: Range = spaces!;
   const whiteSpace = /^\s*$/;
-  let line: number = active.line - 1;
-  while (0 < line && whiteSpace.test(document.lineAt(line).text)) {
-    line--;
+  let lineUp: number = active.line - 1;
+  while (0 < lineUp && whiteSpace.test(document.lineAt(lineUp).text)) {
+    lineUp--;
   }
-  if (0 <= line) {
-    let textLen: number = document.lineAt(line).text.length;
-    const positionUp: Position = active.with(line, textLen);
+  if (0 <= lineUp) {
+    let textUpLen: number = document.lineAt(lineUp).text.length;
+    const positionUp: Position = active.with(lineUp, textUpLen);
     range = range.with(positionUp);
     const spacesUp: Range | undefined =
       document.getWordRangeAtPosition(positionUp, /\s+/);
