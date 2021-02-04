@@ -2,7 +2,7 @@
 	"name": "calva-extras",
 	"displayName": "calva-extras",
 	"description": "https://calva.io/extras",
-	"version": "0.0.1",
+	"version": "0.0.2",
 	"publisher": "clyfe",
 	"repository": {
 		"type": "git",

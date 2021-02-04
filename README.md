@@ -8,7 +8,7 @@ Makes paredit easy.
 sudo npm install -g vsce
 npm build
 vsce package
-code --install-extension calva-extras-0.0.1.vsix
+code --install-extension calva-extras-0.0.2.vsix
 ```
 
 ### Usage
