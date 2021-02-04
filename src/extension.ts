@@ -45,11 +45,14 @@ async function killToClipboard() {
 async function killSpaceBackward() {
   const activeTextEditor: TextEditor = window.activeTextEditor!;
   const active: Position = activeTextEditor.selection.active;
+  const line: number = active.line;
+  const character: number = active.character;
   const document: TextDocument = activeTextEditor.document;
+  const lineLen: number = document.lineAt(line).text.length;
   const spaces: Range | undefined =
     document.getWordRangeAtPosition(active, /\s+/);
-  const allSpacesToLeft: boolean = (spaces !== undefined) &&
-    (spaces.start.character === 0);
+  const allSpacesToLeft: boolean = (character === 0) ||
+   ((spaces !== undefined) && (spaces.start.character === 0));
 
   // When text is selected we backspace normally.
   if (!activeTextEditor.selection.isEmpty) {
@@ -68,13 +71,26 @@ async function killSpaceBackward() {
     } else {
       executeCommand("paredit.deleteBackward");
     }
-    return;
+    return true;
   }
 
-  const lineLen: number = document.lineAt(active.line).text.length;
-  await executeCommand("calva-fmt.formatCurrentForm");
+  if (line === 0) {
+    if(spaces != undefined) {
+      activeTextEditor.edit((editBuilder) => {
+        editBuilder.delete(spaces);
+      });
+    }
+    return true;
+  }
 
   // WARNING: Strange heuristics ahead. We work with what we have...
+
+  // If we're at line start, only deletetion is meaningful.
+  // Don't format such subsequent deletition won't fil
+  if (character !== 0) {
+    await executeCommand("calva-fmt.formatCurrentForm");
+  }
+
   // If too many spaces, formt removed some and aligned.
   // Normally we'd return in that case, but we can't tell.
   // We just assume that was not the case, can continue with the other branch.
@@ -82,11 +98,14 @@ async function killSpaceBackward() {
 
   // Aligned or too few spaces, move at upper line end (if any).
   // TODO: when blank lines contain spaces, have to backspace twice; meh.
-  let range: Range = spaces!;
+  let range: Range = spaces ? spaces : new Range(active, active);
   const whiteSpace = /^\s*$/;
-  let lineUp: number = active.line - 1;
+  const space = / +$/;
+  let lineUp: number = line - 1;
+  let hadSpace = space.test(document.lineAt(lineUp).text);
   while (0 < lineUp && whiteSpace.test(document.lineAt(lineUp).text)) {
     lineUp--;
+    hadSpace = hadSpace || space.test(document.lineAt(lineUp).text);
   }
   if (0 <= lineUp) {
     let textUpLen: number = document.lineAt(lineUp).text.length;
@@ -97,9 +116,24 @@ async function killSpaceBackward() {
     // Add the spaces or the newline to the range.
     if (spacesUp !== undefined) { range = range.union(spacesUp); }
   }
-  await activeTextEditor.edit((editBuilder) => {
-    editBuilder.replace(range, " ");
-  });
+  function edit() : Thenable<boolean> {
+    return activeTextEditor.edit((editBuilder) => {
+      if (lineUp === 0) {
+        editBuilder.delete(range);
+      } else {
+        editBuilder.replace(range, " ");
+      }
+    });
+  }
+  let tries: number = 2;
+  let done: boolean = false
+  do {
+    if(lineLen != document.lineAt(active.line).text.length) {
+      break;
+    }
+    done = await edit();
+    tries--;
+  } while(tries > 0 && !done && hadSpace);
   executeCommand("calva-fmt.formatCurrentForm");
 };
 
