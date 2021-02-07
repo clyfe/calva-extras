@@ -107,15 +107,16 @@ async function killSpaceBackward() {
     lineUp--;
     hadSpace = hadSpace || space.test(document.lineAt(lineUp).text);
   }
-  if (0 <= lineUp) {
-    let textUpLen: number = document.lineAt(lineUp).text.length;
-    const positionUp: Position = active.with(lineUp, textUpLen);
-    range = range.with(positionUp);
-    const spacesUp: Range | undefined =
-      document.getWordRangeAtPosition(positionUp, /\s+/);
-    // Add the spaces or the newline to the range.
-    if (spacesUp !== undefined) { range = range.union(spacesUp); }
+  if (lineUp < line - 1) {
+    lineUp++;
   }
+  let textUpLen: number = document.lineAt(lineUp).text.length;
+  const positionUp: Position = active.with(lineUp, textUpLen);
+  range = range.with(positionUp);
+  const spacesUp: Range | undefined =
+    document.getWordRangeAtPosition(positionUp, /\s+/);
+  // Add the spaces or the newline to the range.
+  if (spacesUp !== undefined) { range = range.union(spacesUp); }
   function edit() : Thenable<boolean> {
     return activeTextEditor.edit((editBuilder) => {
       if (lineUp === 0) {
