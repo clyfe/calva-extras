@@ -55,6 +55,7 @@ async function killSpaceBackward() {
   const allSpacesToLeft: boolean = (character === 0) ||
    ((spaces !== undefined) && (spaces.start.character === 0));
   const whiteSpace = /^\s*$/;
+  const space = /^\s+$/;
 
   // When text is selected we backspace normally.
   if (!activeTextEditor.selection.isEmpty) {
@@ -103,6 +104,7 @@ async function killSpaceBackward() {
   let range: Range = spaces ? spaces : new Range(active, active);
   let lineUp: number = line - 1;
   let textUpLen: number = document.lineAt(lineUp).text.length;
+  let hasSpace = space.test(document.lineAt(lineUp).text);
   const positionUp: Position = active.with(lineUp, textUpLen);
   range = range.with(positionUp);
   const spacesUp: Range | undefined =
@@ -118,7 +120,13 @@ async function killSpaceBackward() {
       }
     });
   }
-  if (await edit()) {
+  let tries: number = 2;
+  let done: boolean = false
+  do {
+    done = await edit();
+    tries--;
+  } while(tries > 0 && !done && hasSpace);
+  if (done) {
     executeCommand("calva-fmt.formatCurrentForm");
   }
 };
