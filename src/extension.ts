@@ -5,7 +5,8 @@ import {
   TextEditor,
   TextDocument,
   Position,
-  Range
+  Range,
+  Selection
 } from 'vscode';
 
 const {
@@ -34,9 +35,10 @@ async function killToClipboard() {
 // place when deleting long-whitespace. Long-whitespace is more than one space
 // at the immediate left of the cursor.
 //
-// A backspace keystroke can do 2 things on long-whitespace:
+// A backspace keystroke can do 2 things on long-whitespace inside a sexp:
 // 1. Format current line.
-// 2. Move current line at the end of the previous one, and format that one.
+// 2. Move current line at the end of the previous (skipping blanks) one, and
+//    format that one.
 //
 // 1 - happens when:
 // * all we have to the left are spaces untill line start, and
@@ -48,11 +50,11 @@ async function killSpaceBackward() {
   const line: number = active.line;
   const character: number = active.character;
   const document: TextDocument = activeTextEditor.document;
-  const lineLen: number = document.lineAt(line).text.length;
   const spaces: Range | undefined =
     document.getWordRangeAtPosition(active, /\s+/);
   const allSpacesToLeft: boolean = (character === 0) ||
    ((spaces !== undefined) && (spaces.start.character === 0));
+  const whiteSpace = /^\s*$/;
 
   // When text is selected we backspace normally.
   if (!activeTextEditor.selection.isEmpty) {
@@ -74,68 +76,51 @@ async function killSpaceBackward() {
     return true;
   }
 
-  if (line === 0) {
+  // Delete spaces on first line, or move form up.
+  if (line === 0 || whiteSpace.test(document.lineAt(line).text)) {
     if(spaces != undefined) {
       activeTextEditor.edit((editBuilder) => {
         editBuilder.delete(spaces);
       });
+    } else {
+      executeCommand("paredit.deleteBackward");
     }
     return true;
   }
 
   // WARNING: Strange heuristics ahead. We work with what we have...
 
-  // If we're at line start, only deletetion is meaningful.
-  // Don't format such subsequent deletition won't fil
   if (character !== 0) {
     await executeCommand("calva-fmt.formatCurrentForm");
   }
 
-  // If too many spaces, formt removed some and aligned.
+  // If too many spaces, format removed some and aligned.
   // Normally we'd return in that case, but we can't tell.
   // We just assume that was not the case, can continue with the other branch.
-  // If it was the case, the ops that follow will just fail.
+  // If it was the case, the ops that follow will just fail to effect.
 
   // Aligned or too few spaces, move at upper line end (if any).
-  // TODO: when blank lines contain spaces, have to backspace twice; meh.
   let range: Range = spaces ? spaces : new Range(active, active);
-  const whiteSpace = /^\s*$/;
-  const space = / +$/;
   let lineUp: number = line - 1;
-  let hadSpace = space.test(document.lineAt(lineUp).text);
-  while (0 < lineUp && whiteSpace.test(document.lineAt(lineUp).text)) {
-    lineUp--;
-    hadSpace = hadSpace || space.test(document.lineAt(lineUp).text);
-  }
-  if (lineUp < line - 1) {
-    lineUp++;
-  }
   let textUpLen: number = document.lineAt(lineUp).text.length;
   const positionUp: Position = active.with(lineUp, textUpLen);
   range = range.with(positionUp);
   const spacesUp: Range | undefined =
     document.getWordRangeAtPosition(positionUp, /\s+/);
-  // Add the spaces or the newline to the range.
+  // Add the spaces or the newline (if any) to the range we'll delete.
   if (spacesUp !== undefined) { range = range.union(spacesUp); }
-  function edit() : Thenable<boolean> {
+  async function edit() {
     return activeTextEditor.edit((editBuilder) => {
-      if (lineUp === 0) {
+      if (lineUp === 0 || whiteSpace.test(document.lineAt(lineUp).text)) {
         editBuilder.delete(range);
       } else {
         editBuilder.replace(range, " ");
       }
     });
   }
-  let tries: number = 2;
-  let done: boolean = false
-  do {
-    if(lineLen != document.lineAt(active.line).text.length) {
-      break;
-    }
-    done = await edit();
-    tries--;
-  } while(tries > 0 && !done && hadSpace);
-  executeCommand("calva-fmt.formatCurrentForm");
+  if (await edit()) {
+    executeCommand("calva-fmt.formatCurrentForm");
+  }
 };
 
 const parenPair = new Set(["()", "[]", "{}", '""']);
